@@ -53,6 +53,7 @@
 Настроить доступ к google-таблице по api, написать код генерации данных с помощью Python, используя gspread.
 Передать данные в таблицу, построить график и диаграмму, используя переданные данные.
 import gspread
+
 ![image](https://github.com/Den1sovDm1triy/DA-in-GameDev-lab1/assets/120582775/2c9b5c2e-8bf2-47c5-bae8-e1f1568de1bf)
 
 ```py
@@ -87,31 +88,107 @@ while i <= len(mon):
 Написать скрипт для воспроизведения звуков, в зависимости от значения в таблице.
 
 
-```py
+```C#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Networking;
+using SimpleJSON;
 
-import ScriptEnv
-ScriptEnv.Initialize("Ansoft.ElectronicsDesktop")
-oDesktop.RestoreWindow()
-oProject = oDesktop.NewProject()
-oProject.Rename("C:/Users/denisov.dv/Documents/Ansoft/SphereDIffraction.aedt", True)
-oProject.InsertDesign("HFSS", "HFSSDesign1", "HFSS Terminal Network", "")
-oDesign = oProject.SetActiveDesign("HFSSDesign1")
-oEditor = oDesign.SetActiveEditor("3D Modeler")
-oEditor.CreateSphere(
-	[
-		"NAME:SphereParameters",
-		"XCenter:="		, "0mm",
-		"YCenter:="		, "0mm",
-		"ZCenter:="		, "0mm",
-		"Radius:="		, "1.0770329614269mm"
-	], 
-)
+public class NewBehaviourScript : MonoBehaviour
+{
+    public AudioClip goodSpeak;
+    public AudioClip normalSpeak;
+    public AudioClip badSpeak;
+    private AudioSource selectAudio;
+    private Dictionary<string, float> dataSet = new Dictionary<string, float>();
+    private bool statusStart = false;
+    private int i = 1;
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        StartCoroutine(GoogleSheets());
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (i > dataSet.Count) return;
+
+        if (dataSet["Mon_" + i.ToString()] >= 7000 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioGood());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] >= 5000 & dataSet["Mon_" + i.ToString()] < 7000 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioNormal());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+
+        if (dataSet["Mon_" + i.ToString()] < 5000 & statusStart == false & i != dataSet.Count)
+        {
+            StartCoroutine(PlaySelectAudioBad());
+            Debug.Log(dataSet["Mon_" + i.ToString()]);
+        }
+    }
+
+    IEnumerator GoogleSheets()
+    {
+        UnityWebRequest curentResp = UnityWebRequest.Get("https://sheets.googleapis.com/v4/spreadsheets/1ebkp8YXrCNfeZ8xkZcmGcDGoEjUCX5vCdOu2Nzd_rDc/values/Лист1?key=AIzaSyBhymcLCFXtMncG4ofGvmX8-h3fY8XATdQ");
+        yield return curentResp.SendWebRequest();
+        string rawResp = curentResp.downloadHandler.text;
+        var rawJson = JSON.Parse(rawResp);
+        foreach (var itemRawJson in rawJson["values"])
+        {
+            var parseJson = JSON.Parse(itemRawJson.ToString());
+            var selectRow = parseJson[0].AsStringList;
+            dataSet.Add(("Mon_" + selectRow[0]), float.Parse(selectRow[2]));
+        }
+    }
+
+    IEnumerator PlaySelectAudioGood()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = goodSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        i++;
+    }
+    IEnumerator PlaySelectAudioNormal()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = normalSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(3);
+        statusStart = false;
+        i++;
+    }
+    IEnumerator PlaySelectAudioBad()
+    {
+        statusStart = true;
+        selectAudio = GetComponent<AudioSource>();
+        selectAudio.clip = badSpeak;
+        selectAudio.Play();
+        yield return new WaitForSeconds(4);
+        statusStart = false;
+        i++;
+    }
+}
 
 ```
 
+![image](https://github.com/ManualCode/BreadcrumbsDA-in-GameDev-lab2/assets/120582775/3a074884-5fd5-4c76-a248-d4a1024946c5)
+
+
 ## Выводы
 
-Абзац умных слов о том, что было сделано и что было узнано.
+Во время данной лабораторной работы я научился заполнять Google Sheets с помощью Python. Также работать со звуками в Unity и методом StartCoroutine(). Я подключил необходимые сервисы по инструкции, переписал их под свою переменную, описав её до этого, заполнил таблицу и использовал эти данные в Unity для воспроизведения звуков при определенных условиях.
 
 | Plugin | README |
 | ------ | ------ |
